@@ -46,11 +46,11 @@ def init_db(conn):
     CREATE TABLE IF NOT EXISTS files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         filename TEXT NOT NULL,
-        parent_path TEXT NOT NULL,
+        filepath TEXT NOT NULL,
         creation_date TEXT,
         added_date TEXT NOT NULL,
         removed_date TEXT,
-        UNIQUE(filename, parent_path)
+        UNIQUE(filename, filepath)
     )
     """)
 
@@ -102,7 +102,7 @@ def scan_directory(conn, dirname):
 
             cur.execute("""
                 INSERT OR IGNORE INTO files
-                (filename, parent_path, creation_date, added_date, removed_date)
+                (filename, filepath, creation_date, added_date, removed_date)
                 VALUES (?, ?, ?, ?, NULL)
             """, (
                 fname,
@@ -137,7 +137,7 @@ def update_directories(conn):
                 existing.add((fname, root_path))
 
     cur.execute("""
-        SELECT id, filename, parent_path
+        SELECT id, filename, filepath
         FROM files
         WHERE removed_date IS NULL
     """)

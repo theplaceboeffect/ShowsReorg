@@ -63,7 +63,7 @@ def init_schema(conn):
     cur.execute("""
     CREATE TABLE IF NOT EXISTS sonarr_files (
         id INTEGER PRIMARY KEY,
-        file_path TEXT UNIQUE NOT NULL,
+        filepath TEXT UNIQUE NOT NULL,
         series_id INTEGER NOT NULL,
         episode_id INTEGER,
         added_date TEXT NOT NULL,
@@ -118,8 +118,8 @@ def sync_sonarr(conn, base_url, api_key):
         print(f"  episode files: {len(episode_files)}")
 
         for ef in episode_files:
-            file_path = str(Path(ef["path"]).resolve())
-            seen_files.add(file_path)
+            filepath = str(Path(ef["path"]).resolve())
+            seen_files.add(filepath)
             total_files += 1
 
             episode_id_db = None
@@ -152,10 +152,10 @@ def sync_sonarr(conn, base_url, api_key):
 
             cur.execute("""
                 INSERT OR IGNORE INTO sonarr_files
-                (file_path, series_id, episode_id, added_date, removed_date)
+                (filepath, series_id, episode_id, added_date, removed_date)
                 VALUES (?, ?, ?, ?, NULL)
             """, (
-                file_path,
+                filepath,
                 series_db_id,
                 episode_id_db,
                 now,
@@ -164,12 +164,12 @@ def sync_sonarr(conn, base_url, api_key):
             cur.execute("""
                 UPDATE sonarr_files
                 SET removed_date = NULL
-                WHERE file_path = ?
-            """, (file_path,))
+                WHERE filepath = ?
+            """, (filepath,))
 
     # removed files
     cur.execute("""
-        SELECT file_path FROM sonarr_files
+        SELECT filepath FROM sonarr_files
         WHERE removed_date IS NULL
     """)
     for (path,) in cur.fetchall():
@@ -177,7 +177,7 @@ def sync_sonarr(conn, base_url, api_key):
             cur.execute("""
                 UPDATE sonarr_files
                 SET removed_date = ?
-                WHERE file_path = ?
+                WHERE filepath = ?
             """, (now, path))
 
     conn.commit()
